@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lab 4.5</title>
+        <style>            
+            a[href^="http://"]:not([href*="//my-site.ru"]),
+            a[href^="https://"]:not([href*="//my-site.ru"]){
+                color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <p><a href="http://my-site.ru/index.html">link 1</a></p>
+        <p><a href="http://my-site.ru/second.html">link 2</a></p>
+        <p><a href="http://not-my-site.ru/index.html">link 3</a></p>
+        <p><a href="https://not-my-site.ru/index.html">link 4</a></p>
+        <p><a href="http://my-site.ru/students.html">link 5</a></p>
+    </body>
+</html>

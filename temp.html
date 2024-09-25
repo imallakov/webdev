@@ -1,0 +1,292 @@
+# frontend/views.py
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from yandex_api.utils import get_yandex_disk_content
+
+def index(request):
+    if request.method == 'POST':
+        public_key = request.POST.get('public_key')
+        if public_key:
+            # Сохраняем public_key в сессии
+            request.session['public_key'] = public_key
+            return redirect('browse', path='')
+    return render(request, 'frontend/index.html')
+
+def browse(request, path=''):
+    public_key = request.session.get('public_key')
+    if not public_key:
+        return redirect('index')
+    
+    full_path = f"/{path}" if path else ""
+    result = get_yandex_disk_content(public_key, full_path)
+    
+    if result['status'] == 'success':
+        content = result['data']
+        breadcrumbs = [{'name': 'Root', 'path': ''}]
+        if path:
+            parts = path.split('/')
+            for i, part in enumerate(parts):
+                breadcrumbs.append({
+                    'name': part,
+                    'path': '/'.join(parts[:i+1])
+                })
+        return render(request, 'frontend/browse.html', {
+            'content': content,
+            'current_path': path,
+            'breadcrumbs': breadcrumbs
+        })
+    else:
+        return render(request, 'frontend/browse.html', {'error': result['message']})
+
+# frontend/urls.py
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('browse/<path:path>/', views.browse, name='browse'),
+    path('browse/', views.browse, name='browse_root'),
+]
+
+# frontend/templates/frontend/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Яндекс.Диск Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 5px;
+        }
+        button {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Яндекс.Диск Viewer</h1>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <input type="text" name="public_key" placeholder="Введите публичный ключ">
+        <button type="submit">Поиск</button>
+    </form>
+</body>
+</html>
+
+# frontend/templates/frontend/browse.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Яндекс.Диск Browser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: red;
+        }
+        .breadcrumbs {
+            margin-bottom: 20px;
+        }
+        .breadcrumbs a {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <table class="table table-bordered">
+        <thead>
+            <th style="width: 30px; text-align: center; background-color: #f3f3f3">№</th>
+            <th style="width: 150px; text-align: center; background-color: #f3f3f3">Время занятия</th>
+            <th style="text-align: center; background-color: #f3f3f3">Понедельник (16.09.2024)</th>
+            <th style="text-align: center; background-color: #f3f3f3">Вторник (17.09.2024)</th>
+            <th style="text-align: center; background-color: #f3f3f3">Среда (18.09.2024)</th>
+            <th style="text-align: center; background-color: #f3f3f3">Четверг (19.09.2024)</th>
+            <th style="text-align: center; background-color: #f3f3f3">Пятница (20.09.2024)</th>
+            <th style="text-align: center; background-color: #f3f3f3">Суббота (21.09.2024)</th>
+        </thead>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">1</td>
+            <td style="text-align: center; background-color: #f3f3f3">08:00-09:20</td>
+            <td id="1_1_group" style="text-align: center;"></td>
+            <td id="1_2_group" style="text-align: center;"></td>
+            <td id="1_3_group" style="text-align: center;"></td>
+            <td id="1_4_group" style="text-align: center;"></td>
+            <td id="1_5_group" style="text-align: center;"></td>
+            <td id="1_6_group" style="text-align: center;"></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">2</td>
+            <td style="text-align: center; background-color: #f3f3f3">09:35-10:55</td>
+            <td id="2_1_group" style="text-align: center;"></td>
+            <td id="2_2_group" style="text-align: center;"></td>
+            <td id="2_3_group" style="text-align: center;"></td>
+            <td id="2_4_group" style="text-align: center;"></td>
+            <td id="2_5_group" style="text-align: center;"></td>
+            <td id="2_6_group" style="text-align: center;"></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">3</td>
+            <td style="text-align: center; background-color: #f3f3f3">11:35-12:55</td>
+            <td id="3_1_group" style="text-align: center;"></td>
+            <td id="3_2_group" style="text-align: center;"></td>
+            <td id="3_3_group" style="text-align: center;"></td>
+            <td id="3_4_group" style="text-align: center;"></td>
+            <td id="3_5_group" style="text-align: center;"></td>
+            <td id="3_6_group" style="text-align: center;"></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">4</td>
+            <td style="text-align: center; background-color: #f3f3f3">13:10-14:30</td>
+            <td id="4_1_group" style="text-align: center;"></td>
+            <td id="4_2_group" style="text-align: center;"></td>
+            <td id="4_3_group" style="text-align: center;"></td>
+            <td id="4_4_group" style="text-align: center;"></td>
+            <td id="4_5_group" style="text-align: center;"></td>
+            <td id="4_6_group" style="text-align: center;"></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">5</td>
+            <td style="text-align: center; background-color: #f3f3f3">15:10-16:30</td>
+            <td id="5_1_group" style="text-align: center;"></td>
+            <td id="5_2_group" style="text-align: center;"></td>
+            <td id="5_3_group" style="text-align: center;"></td>
+            <td id="5_4_group" style="text-align: center;"></td>
+            <td id="5_5_group" style="text-align: center;"></td>
+            <td id="5_6_group" style="text-align: center;"></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">6</td>
+            <td style="text-align: center; background-color: #f3f3f3">16:45-18:05</td>
+            <td id="6_1_group" style="text-align: center;"></td>
+            <td id="6_2_group" style="text-align: center;"></td>
+            <td id="6_3_group" style="text-align: center;"></td>
+            <td id="6_4_group" style="text-align: center;"></td>
+            <td id="6_5_group" style="text-align: center;"></td>
+            <td id="6_6_group" style="text-align: center;"></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">7</td>
+            <td style="text-align: center; background-color: #f3f3f3">18:20-19:40</td>
+            <td id="7_1_group" style="text-align: center;"></td>
+            <td id="7_2_group" style="text-align: center;"></td>
+            <td id="7_3_group" style="text-align: center;"></td>
+            <td id="7_4_group" style="text-align: center;"></td>
+            <td id="7_5_group" style="text-align: center;"></td>
+            <td id="7_6_group" style="text-align: center;"></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">8</td>
+            <td style="text-align: center; background-color: #f3f3f3">19:55-21:15</td>
+            <td id="8_1_group" style="text-align: center;"></td>
+            <td id="8_2_group" style="text-align: center;"></td>
+            <td id="8_3_group" style="text-align: center;"></td>
+            <td id="8_4_group" style="text-align: center;"></td>
+            <td id="8_5_group" style="text-align: center;"></td>
+            <td id="8_6_group" style="text-align: center;"></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; background-color: #f3f3f3">9</td>
+            <td style="text-align: center; background-color: #f3f3f3">21:25-22:45</td>
+            <td id="9_1_group" style="text-align: center;"></td>
+            <td id="9_2_group" style="text-align: center;"></td>
+            <td id="9_3_group" style="text-align: center;"></td>
+            <td id="9_4_group" style="text-align: center;"></td>
+            <td id="9_5_group" style="text-align: center;"></td>
+            <td id="9_6_group" style="text-align: center;"></td>
+        </tr>
+    </tbody></table><script>
+        $('#6_1_group').append('<div><br>Проектирование информационных систем (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(155335,3)">Путинцева Анастасия Андреевна</button><br><button type="button" class="link-button" onclick="link_class(31641,3)">Физмат (Заки Валиди 32/1) - 528</button></div>');
+        document.getElementById('6_1_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#5_3_group').append('<div><br>Разработка Web-приложений (Лабораторная работа)<br><button type="button" class="link-button" onclick="link_teacher(158295,3)">Ткачев Владислав Игоревич</button><br><button type="button" class="link-button" onclick="link_class(31654,3)">Физмат (Заки Валиди 32/1) - 525</button></div>');
+        document.getElementById('5_3_group').style.backgroundColor = '#d1c4fb';
+    </script>
+    <script>
+        $('#7_1_group').append('<div><br>Проектирование информационных систем (Лабораторная работа)<br><button type="button" class="link-button" onclick="link_teacher(155335,3)">Путинцева Анастасия Андреевна</button><br><button type="button" class="link-button" onclick="link_class(31670,3)">Физмат (Заки Валиди 32/1) - 520а</button></div>');
+        document.getElementById('7_1_group').style.backgroundColor = '#d1c4fb';
+    </script>
+    <script>
+        $('#6_3_group').append('<div><br>Разработка Web-приложений (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(158295,3)">Ткачев Владислав Игоревич</button><br><button type="button" class="link-button" onclick="link_class(31641,3)">Физмат (Заки Валиди 32/1) - 528</button></div>');
+        document.getElementById('6_3_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#5_2_group').append('<div><br>Информационная безопасность (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(159056,3)">Луценко Владимир Иванович</button><br><button type="button" class="link-button" onclick="link_class(31623,3)">Физмат (Заки Валиди 32/1) - 531</button></div>');
+        document.getElementById('5_2_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#4_2_group').append('<div><br>Информационная безопасность (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(159056,3)">Луценко Владимир Иванович</button><br><button type="button" class="link-button" onclick="link_class(31621,3)">Физмат (Заки Валиди 32/1) - 501</button></div>');
+        document.getElementById('4_2_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#6_2_group').append('<div><br>Нечеткая логика (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(157127,3)">Полупанов Дмитрий Васильевич</button><br><button type="button" class="link-button" onclick="link_class(31623,3)">Физмат (Заки Валиди 32/1) - 531</button></div>');
+        document.getElementById('6_2_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#6_4_group').append('<div><br>Информационное право (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(161005,3)">Газизов Раиль Робертович</button><br><button type="button" class="link-button" onclick="link_class(31623,3)">Физмат (Заки Валиди 32/1) - 531</button></div>');
+        document.getElementById('6_4_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#7_4_group').append('<div><br>Информационное право (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(161005,3)">Газизов Раиль Робертович</button><br><button type="button" class="link-button" onclick="link_class(31623,3)">Физмат (Заки Валиди 32/1) - 531</button></div>');
+        document.getElementById('7_4_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#5_4_group').append('<div><br>Интернет-программирование (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(158295,3)">Ткачев Владислав Игоревич</button><br><button type="button" class="link-button" onclick="link_class(31637,3)">Физмат (Заки Валиди 32/1) - 530</button></div>');
+        document.getElementById('5_4_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#3_5_group').append('<div><br>Комплексный и функциональный анализ (Лекция)<br><button type="button" class="link-button" onclick="link_teacher(159659,3)">Башмаков Рустэм Абдрауфович</button><br><button type="button" class="link-button" onclick="link_class(31637,3)">Физмат (Заки Валиди 32/1) - 530</button></div>');
+        document.getElementById('3_5_group').style.backgroundColor = '#d6f3f9';
+    </script>
+    <script>
+        $('#2_5_group').append('<div><br>Комплексный и функциональный анализ (Лабораторная работа)<br><button type="button" class="link-button" onclick="link_teacher(159659,3)">Башмаков Рустэм Абдрауфович</button><br><button type="button" class="link-button" onclick="link_class(31653,3)">Физмат (Заки Валиди 32/1) - 526</button></div>');
+        document.getElementById('2_5_group').style.backgroundColor = '#d1c4fb';
+    </script>
+    <script>
+        $('#1_5_group').append('<div><br>Комплексный и функциональный анализ (Лабораторная работа)<br><button type="button" class="link-button" onclick="link_teacher(159659,3)">Башмаков Рустэм Абдрауфович</button><br><button type="button" class="link-button" onclick="link_class(31653,3)">Физмат (Заки Валиди 32/1) - 526</button></div>');
+        document.getElementById('1_5_group').style.backgroundColor = '#d1c4fb';
+    </script>
+    <script>
+        $('#4_5_group').append('<div><br>Общая физическая подготовка (Практика (семинар))<br><br><button type="button" class="link-button" onclick="link_class(18738,3)"> - Уточняется</button></div>');
+        document.getElementById('4_5_group').style.backgroundColor = '#ffd9a2';
+    </script>
+    
+</body>
+</html>
+
+# yandex_api/utils.py
+import requests
+
+def get_yandex_disk_content(public_key, path=''):
+    url = f"https://cloud-api.yandex.net/v1/disk/public/resources?public_key={public_key}&path={path}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return {'status': 'success', 'data': data}
+    else:
+        return {'status': 'error', 'message': 'Не удалось получить данные'}

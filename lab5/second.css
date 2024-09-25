@@ -1,0 +1,71 @@
+#products-container {
+    width: 100%;                   /* Full width of the container */
+}
+#product{
+    width: 160px;
+    float:left;
+    margin: 1%;
+}
+#imagebox{
+    position: relative;
+    padding-top: 5px;
+    background-color: grey;
+}
+#salebox{
+    position: absolute;
+    top: 140px;
+    left: 0px;
+    background-color: red;
+    width: 50px;
+    height: fit-content;
+    margin: 0%;
+    padding: 0%;
+    text-align: center;
+}
+img{
+    height: 150px;
+    width: 150px;
+}
+#sale{
+    margin: 0%;
+    padding: 0%;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+}
+#bestseller{
+    color: orange;
+    font-size: smaller;
+    margin-top: 2%;
+    margin-bottom: 2%;
+}
+#newprice{
+    color: red;
+    font-weight: bold;
+}
+#oldprice{
+    text-decoration:line-through;
+    color: grey;
+    text-decoration-color: red;
+    font-size: smaller;
+}
+#info {
+    color: rgb(82, 82, 82);
+    margin: 0;
+    width: 160px;                  /* Set a fixed width for the container */
+    overflow: hidden;              /* Hide any overflowed content */
+    text-overflow: ellipsis;       /* Display an ellipsis (...) for overflowed text */
+    display: -webkit-box;            /* Use flexbox layout */
+    -webkit-box-orient: vertical;   /* Set the orientation to vertical */
+    -webkit-line-clamp: 2;           /* Limit to 2 lines */
+    line-clamp: 2;
+    overflow: hidden;                /* Hide any overflowed content */
+    line-height: 1.5; 
+}
+#info:hover {
+    color: red;
+}
+
+img:hover {
+    opacity: 0.7;
+}
